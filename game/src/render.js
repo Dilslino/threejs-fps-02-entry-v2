@@ -172,7 +172,7 @@ export function createRenderer(canvas) {
     const site = SITES[key];
     const ring = new THREE.Mesh(
       new THREE.RingGeometry(1.6, 2.0, 32),
-      new THREE.MeshBasicMaterial({ color: site.color, side: THREE.DoubleSide }),
+      new THREE.MeshBasicMaterial({ color: site.color, transparent: true, opacity: 0.9, side: THREE.DoubleSide }),
     );
     ring.rotation.x = -Math.PI / 2;
     ring.position.set(site.x, 0.02, site.z);
@@ -211,6 +211,7 @@ export function createRenderer(canvas) {
   scene.add(camera);
 
   // ---- Muzzle flash: sprite + point light, 50 ms ----
+  // Invisible when idle: a zero-opacity mesh still costs a draw call.
   const flashLight = new THREE.PointLight(0xFFD27A, 0, 8);
   scene.add(flashLight);
   const flashQuad = new THREE.Mesh(
@@ -220,9 +221,11 @@ export function createRenderer(canvas) {
       blending: THREE.AdditiveBlending, depthWrite: false,
     }),
   );
+  flashQuad.visible = false;
   scene.add(flashQuad);
 
-  // ---- Tracers: pooled additive lines, 80 ms life, no allocation ----
+  // ---- Tracers: pooled additive lines, 150 ms life, no allocation ----
+  // Hidden when idle (opacity 0 still draws) — visibility is toggled.
   const tracerPool = [];
   for (let i = 0; i < 16; i++) {
     const geo = new THREE.BufferGeometry();
@@ -232,6 +235,7 @@ export function createRenderer(canvas) {
       blending: THREE.AdditiveBlending,
     }));
     line.frustumCulled = false;
+    line.visible = false;
     scene.add(line);
     tracerPool.push({ line, life: 0 });
   }
@@ -245,6 +249,7 @@ export function createRenderer(canvas) {
     t.line.geometry.attributes.position.needsUpdate = true;
     t.line.material.color.setHex(color || 0xFFE08A);
     t.line.material.opacity = 0.9;
+    t.line.visible = true;
     t.life = 0.15;
   }
 
@@ -257,6 +262,7 @@ export function createRenderer(canvas) {
         color: 0xFFFFFF, transparent: true, opacity: 0, depthWrite: false,
       }),
     );
+    q.visible = false;
     scene.add(q);
     puffPool.push({ mesh: q, life: 0 });
   }
@@ -268,6 +274,7 @@ export function createRenderer(canvas) {
     p.mesh.material.color.setHex(color || 0xD8C9A8);
     p.mesh.material.opacity = 0.8;
     p.mesh.scale.setScalar(0.5);
+    p.mesh.visible = true;
     p.life = 0.35;
   }
 
@@ -341,6 +348,7 @@ export function createRenderer(canvas) {
     muzzleFlash(pos) {
       flashQuad.position.copy(pos);
       flashQuad.material.opacity = 0.95;
+      flashQuad.visible = true;
       flashLight.position.copy(pos);
       flashLight.intensity = 20;
       flashT = 0.05;
@@ -366,11 +374,13 @@ export function createRenderer(canvas) {
       }
     },
     update(dt, time) {
-      // Tracer + puff decay.
+      // Tracer + puff decay — hide the mesh when the effect ends, so the
+      // pool costs no draw calls while idle.
       for (const t of tracerPool) {
         if (t.life > 0) {
           t.life -= dt;
           t.line.material.opacity = Math.max(0, t.life / 0.15) * 0.9;
+          if (t.life <= 0) t.line.visible = false;
         }
       }
       for (const p of puffPool) {
@@ -379,12 +389,14 @@ export function createRenderer(canvas) {
           p.mesh.material.opacity = Math.max(0, p.life / 0.35) * 0.8;
           p.mesh.scale.setScalar(p.mesh.scale.x + dt * 2);
           p.mesh.lookAt(camera.position);
+          if (p.life <= 0) p.mesh.visible = false;
         }
       }
       if (flashT > 0) {
         flashT -= dt;
         if (flashT <= 0) {
           flashQuad.material.opacity = 0;
+          flashQuad.visible = false;
           flashLight.intensity = 0;
         }
       }
