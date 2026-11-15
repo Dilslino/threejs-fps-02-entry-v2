@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!--
+  GLASSHOUSE — a bright botanical-conservatory tactical FPS (5v5, plant/defuse).
+  Built for make.fun bounty threejs-fps-02. Original map, art, sounds, names.
+  Nothing here copies Counter-Strike or any commercial game.
+
+  THE LOOP: 5 s freeze time (buy with B) -> 100 s round -> plant the
+  Canister at Site A (amber, Palm House) or Site B (aqua, Lily Pond), or
+  eliminate the enemy team -> first to 7 rounds wins the match.
+  WHAT TO LOOK FOR: freeze time + buy economy; radar (top right) with
+  teammate dots and sound pings; radio callouts from bots; bots that hold
+  angles, rotate on the plant beep, and never shoot through walls (LOS-gated
+  perception in bots.js: canSee / heardShot); per-weapon recoil/spread that
+  triples while moving (weapons.js table); headshots x3/x4; WebAudio synth
+  sounds (birdsong, fountain, breeze — no audio files).
+  CONTROLS: WASD move, mouse aim, click fire, R reload, Ctrl crouch,
+  Space jump, 1/2/3/4 weapons, B buy (freeze only), E plant/defuse,
+  Tab scoreboard, RMB scope (DM-8).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GLASSHOUSE — Botanical Tactical FPS</title>
+<link rel="stylesheet" href="./styles.css">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.min.js" } }
+</script>
+</head>
+<body>
+<canvas id="game" width="1280" height="720"></canvas>
+<div id="hud">
+  <div id="score" class="panel">THORNS 0 — 0 KEEPERS · ROUND 1</div>
+  <div id="timer-wrap" class="panel">
+    <div id="timer">1:40</div>
+    <div id="objective">CANISTER: carried by a teammate</div>
+    <div id="freeze">FREEZE 0:05 — press B to buy</div>
+  </div>
+  <canvas id="radar" width="160" height="120"></canvas>
+  <div id="health-wrap" class="panel">
+    <div id="hp-num">100</div>
+    <div class="bar"><div id="health"></div></div>
+    <div class="bar armor"><div id="armor"></div></div>
+  </div>
+  <div id="ammo-wrap" class="panel">
+    <div id="ammo">12 / 36</div>
+    <div id="weapon-name">S6 sidearm</div>
+  </div>
+  <div id="crosshair"><span class="ch t"></span><span class="ch b"></span><span class="ch l"></span><span class="ch r"></span><span class="ch dot"></span></div>
+  <div id="killfeed"></div>
+  <div id="callouts"></div>
+  <div id="prompt"></div>
+  <div id="hitmarker"><span>✕</span></div>
+  <div id="damage-vignette"></div>
+  <div id="banner"><div id="banner-title"></div><div id="banner-sub"></div></div>
+  <div id="buy-menu">
+    <h2>BUY — FREEZE TIME</h2>
+    <div id="buy-money">$800</div>
+    <div id="buy-grid"></div>
+    <div id="buy-loadouts"></div>
+    <p class="buy-hint">Click or press 1–9 · B or Esc to close</p>
+  </div>
+  <div id="scoreboard">
+    <h2>SCOREBOARD</h2>
+    <table><thead><tr><th>Player</th><th>K</th><th>D</th><th>$</th><th>Acc</th></tr></thead>
+    <tbody id="sb-body"></tbody></table>
+  </div>
+  <div id="match-end"><div id="me-body"></div></div>
+  <div id="lock-prompt">Click to lock the mouse</div>
+  <div id="debug-overlay"></div>
+  <div id="perf-overlay"></div>
+</div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
