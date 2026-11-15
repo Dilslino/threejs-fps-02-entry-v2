@@ -555,7 +555,7 @@ function stageShot(n) {
     state.canister.site = 'A';
     state.canister.fuse = 32;
     state.canister.carrierId = null;
-    state.smokes.push({ x: -19, z: -3, until: state.time + 12 });
+    state.smokes.push({ x: -21, z: -3, until: state.time + 12 });
     me.money = 1800;
     me.weaponId = 'ar-55'; me.mag = 20; me.reserve = 50;
     me.x = -17; me.z = 4; me.yaw = Math.atan2(-(-24 - me.x), -(0 - me.z));

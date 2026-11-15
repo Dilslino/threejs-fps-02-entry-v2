@@ -309,12 +309,15 @@ export function createRenderer(canvas) {
   scene.add(canister);
 
   // ---- Smoke: pooled soft grey spheres, one per live smoke puff ----
+  // Flattened (a low cloud, not a dome) so a puff reads as smoke even
+  // when the camera is close to it.
   const smokePool = [];
   for (let i = 0; i < 3; i++) {
     const s = new THREE.Mesh(
-      new THREE.SphereGeometry(4, 12, 8),
+      new THREE.SphereGeometry(3.5, 12, 8),
       new THREE.MeshLambertMaterial({ color: 0xC8C8C8, transparent: true, opacity: 0 }),
     );
+    s.scale.set(1, 0.55, 1);
     scene.add(s);
     smokePool.push(s);
   }
@@ -355,8 +358,8 @@ export function createRenderer(canvas) {
         const mesh = smokePool[i];
         if (puff && puff.until > now) {
           mesh.visible = true;
-          mesh.position.set(puff.x, 2, puff.z);
-          mesh.material.opacity = 0.38;
+          mesh.position.set(puff.x, 1.6, puff.z);
+          mesh.material.opacity = 0.32;
         } else {
           mesh.visible = false;
         }
