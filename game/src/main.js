@@ -28,6 +28,9 @@ const SHOT = params.get('shot') ? parseInt(params.get('shot'), 10) : 0;
 const DEBUG = params.get('debug') === '1';
 const PERF = params.get('perf') === '1';
 const AUTOPLAY = params.get('autoplay') === '1';
+// ?ff=N fast-forwards the sim N× (test only — lets a full bot-only match
+// finish in minutes instead of ~20). Rendering still runs every frame.
+const FF = Math.max(1, parseInt(params.get('ff') || '1', 10));
 
 const rng = makeRng(SHOT ? 7 : (Date.now() % 2147483647));
 const bus = makeBus();
@@ -467,14 +470,15 @@ function frame(now) {
 
   if (!SHOT) {
     const t0 = performance.now();
-    acc += dt;
+    acc += dt * FF;
     let n = 0;
-    while (acc >= FIXED_STEP && n < 5) {
+    const maxSteps = 5 * FF;
+    while (acc >= FIXED_STEP && n < maxSteps) {
       step(FIXED_STEP);
       acc -= FIXED_STEP;
       n++;
     }
-    if (n === 5) acc = 0; // spiral-of-death guard
+    if (n === maxSteps) acc = 0; // spiral-of-death guard
     simMs = performance.now() - t0;
   }
 
@@ -610,6 +614,8 @@ function stageShot(n) {
 
 // ---- Boot ----
 state.players = players;
+// Test handle (also used by the finalist review to inspect state).
+window.__glasshouse = { state, players, version: 'glasshouse-v2' };
 if (AUTOPLAY) {
   // Bot-only match: the player gets a bot brain too.
   makeBot(me, 'veteran', 'mid', null);
