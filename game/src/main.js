@@ -420,32 +420,37 @@ function step(dt) {
       }
     }
     // Player plant channel (hold E in the zone while carrying).
-    if (keys.KeyE && me.alive && state.canister.state === 'carried' && state.canister.carrierId === me.id) {
-      const site = nearSite(me);
-      if (site) {
-        state.canister.plantProgress += dt / PLANT_TIME;
-        state.canister.plantingId = me.id;
-        if (state.canister.plantProgress >= 1) {
-          state.canister.state = 'planted';
-          state.canister.site = site;
-          state.canister.fuse = FUSE_TIME;
-          state.canister.plantProgress = 0;
-          me.money += PLANT_REWARD;
-          callout(state, me, `canister down ${site}`);
-          bus.emit('plant', { site });
-          // Tell every bot the plant happened (whole-map beep).
-          for (const p of players) {
-            if (p.bot) {
-              const sitePos = SITES[site];
-              p.bot.heard = { x: sitePos.x, z: sitePos.z, t: state.time, kind: 'plant' };
+    // Guarded to the human carrier ONLY: a bot carrier's channel runs
+    // in updateBot, and the else-branch below would reset its progress
+    // to 0 every step, so a bot carrier could never plant.
+    if (state.canister.carrierId === me.id) {
+      if (keys.KeyE && me.alive && state.canister.state === 'carried') {
+        const site = nearSite(me);
+        if (site) {
+          state.canister.plantProgress += dt / PLANT_TIME;
+          state.canister.plantingId = me.id;
+          if (state.canister.plantProgress >= 1) {
+            state.canister.state = 'planted';
+            state.canister.site = site;
+            state.canister.fuse = FUSE_TIME;
+            state.canister.plantProgress = 0;
+            me.money += PLANT_REWARD;
+            callout(state, me, `canister down ${site}`);
+            bus.emit('plant', { site });
+            // Tell every bot the plant happened (whole-map beep).
+            for (const p of players) {
+              if (p.bot) {
+                const sitePos = SITES[site];
+                p.bot.heard = { x: sitePos.x, z: sitePos.z, t: state.time, kind: 'plant' };
+              }
             }
           }
+        } else {
+          state.canister.plantProgress = 0;
         }
       } else {
         state.canister.plantProgress = 0;
       }
-    } else {
-      state.canister.plantProgress = 0;
     }
 
     // Player movement + shooting.

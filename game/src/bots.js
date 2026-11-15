@@ -202,7 +202,8 @@ function think(s, p, rng) {
     return;
   }
   // Heard a shot recently with no visible target: peek toward it.
-  if (!b.visible && b.heard && now - b.heard.t < 3 && b.state === 'advance') {
+  // The carrier never chases gunfire — its job is the site, not the fight.
+  if (!b.visible && b.heard && now - b.heard.t < 3 && b.state === 'advance' && b.role !== 'carrier') {
     const wp = nearestWaypoint(b.heard.x, b.heard.z);
     if (b.route.length === 0 || b.route[b.route.length - 1].id !== wp) {
       routeTo(p, wp);
