@@ -16,7 +16,8 @@ Space jump · 1/2/3/4 weapons · B buy (freeze only) · E plant · G grenade ·
 Tab scoreboard · RMB scope (DM-8) · R play again (match end).
 
 **Systems:** freeze time + buy economy ($800 start, $3,250 win / $1,900
-loss, $300 kill / plant) · 4 weapons with distinct recoil/spread tables
+loss, $300 kill / plant) · if the carrier dies the Canister drops where
+they fell — any Thorn can pick it up and become the new carrier · 4 weapons with distinct recoil/spread tables
 (S6, VX-9, AR-55, DM-8) + Kevlar/helmet + flash/smoke/frag · headshots
 x3/x4 · spread triples while moving (stopping to aim pays) · bot AI on a
 waypoint graph (Advance/Hold/Rotate/Retreat/Plant/Defuse) with LOS-gated
@@ -28,7 +29,8 @@ synth sounds (gunshots, birdsong, fountain, breeze — no audio files).
 `index.html?shot=1..4` (fixed seed 7, scripted positions, frozen timer):
 1 firefight on the Central Walk · 2 Site A plant moment · 3 freeze-time
 buy menu · 4 map overview. `?debug=1` shows bot states, `?perf=1` shows
-fps/draw calls, `?autoplay=1` runs a bot-only match.
+fps/draw calls, `?autoplay=1` runs a bot-only match, `?ff=N` fast-forwards
+the sim N× for testing.
 
 **Tech:** three.js 0.187.0 vendored byte-for-byte, static ES modules, no
 build step, zero network requests at runtime. `main.ts` (Node 22, stdlib

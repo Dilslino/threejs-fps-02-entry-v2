@@ -91,11 +91,16 @@ export function assignRoles(s, rng) {
     p.bot.site = p.bot.role === 'fern' ? 'A' : p.bot.role === 'pond' ? 'B' : null;
   }
   const kRoles = ['siteA', 'siteA', 'siteB', 'siteB', 'roamer'];
-  let ki = 0;
+  let ki = 0, aCount = 0, bCount = 0;
   for (const p of keepers) {
     if (!p.bot) continue;
     p.bot.role = kRoles[ki++ % kRoles.length];
     p.bot.site = p.bot.role === 'siteA' ? 'A' : p.bot.role === 'siteB' ? 'B' : null;
+    // The two defenders on a site hold DIFFERENT angles (north + south
+    // of the site) instead of stacking on one point — a stacked pair
+    // held the same lane and the plant could never happen.
+    if (p.bot.role === 'siteA') p.bot.hold = (aCount++ === 0) ? 'holdA' : 'holdA2';
+    if (p.bot.role === 'siteB') p.bot.hold = (bCount++ === 0) ? 'holdB' : 'holdB2';
   }
   // Bot economy: bots buy by tier from the same price list as the player.
   for (const p of s.players) {
@@ -139,8 +144,8 @@ function routeTarget(p) {
     if (b.role === 'pond') return 'siteB';
     return 'domeN'; // mid
   }
-  if (b.role === 'siteA') return 'holdA';
-  if (b.role === 'siteB') return 'holdB';
+  if (b.role === 'siteA') return b.hold || 'holdA';
+  if (b.role === 'siteB') return b.hold || 'holdB';
   return 'holdDome'; // roamer
 }
 
@@ -175,10 +180,11 @@ function think(s, p, rng) {
     const site = b.site || 'A';
     const dSite = Math.hypot(SITES[site].x - p.x, SITES[site].z - p.z);
     // The carrier plants when the site itself is clear — defenders
-    // holding 8+ m out do not block the plant (they can still be shot
-    // while the channel runs). 15 m made the plant nearly impossible.
+    // holding 5+ m out do not block the plant (they can still be shot
+    // while the channel runs). 8 m made the plant nearly impossible
+    // because both site holders stand ~7 m from the site.
     const enemiesNear = s.players.some(e => e.team !== p.team && e.alive &&
-      Math.hypot(e.x - SITES[site].x, e.z - SITES[site].z) < 8);
+      Math.hypot(e.x - SITES[site].x, e.z - SITES[site].z) < 5);
     if (dSite < 3 && !enemiesNear) { b.state = 'plant'; return; }
   }
   if (s.canister.state === 'planted' && p.team === 'keepers') {

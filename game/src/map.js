@@ -126,7 +126,9 @@ export const WAYPOINTS = [
   { id: 'holdDome', x: 0, z: -6 },
   { id: 'holdMidS', x: 0, z: 12 },
   { id: 'holdA', x: -21, z: -6 },
+  { id: 'holdA2', x: -21, z: 6 },
   { id: 'holdB', x: 21, z: -8 },
+  { id: 'holdB2', x: 24, z: 8 },
 ];
 
 export const EDGES = [
@@ -144,10 +146,12 @@ export const EDGES = [
   ['fernMid', 'siteA'], ['fernMid', 'fernN'], ['fernMid', 'fernS'],
   ['fernN', 'fernNW'], ['fernS', 'fernSW'], ['fernNW', 'siteA'], ['fernSW', 'siteA'],
   ['fernN', 'holdA'], ['holdA', 'siteA'],
+  ['fernSW', 'holdA2'], ['holdA2', 'siteA'],
   ['pondEntry', 'pondArch'], ['pondEntry', 'pondN'], ['pondEntry', 'pondS'],
   ['pondArch', 'siteB'], ['pondArch', 'pondN'], ['pondArch', 'pondS'],
   ['pondN', 'pondNE'], ['pondS', 'pondSE'], ['pondNE', 'siteB'], ['pondSE', 'siteB'],
   ['pondN', 'holdB'], ['holdB', 'siteB'],
+  ['pondSE', 'holdB2'], ['holdB2', 'siteB'],
   ['holdMidS', 'thornSpawn'],
 ];
 
