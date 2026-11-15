@@ -9,8 +9,8 @@
 // a direction and an approximate position only — never a wall-hack aim
 // point. Last-seen memory expires after 2 s.
 
-import { hasLOS, nearestWaypoint, findPath, moveCircle, smokeBlocks, SITES } from './map.js';
-import { WEAPONS, tryFire, startReload, finishReload, applyDamage, throwGrenade } from './weapons.js';
+import { hasLOS, nearestWaypoint, findPath, moveCircle, SITES } from './map.js';
+import { WEAPONS, tryFire, startReload, finishReload, applyDamage, throwGrenade, smokeBlocks } from './weapons.js';
 
 export const TIERS = {
   recruit: { reaction: [700, 900], spread: 6.0, burst: 3, pause: [600, 900], buy: ['vx-9', 's6'] },
@@ -30,6 +30,10 @@ export function makeBot(p, tier, role, site) {
     route: [], routeIdx: 0,
     holdUntil: 0, peekUntil: 0,
     nextThink: 0, nextLOS: 0,
+    // Unstuck: if the bot barely moves for 0.6 s while advancing, it is
+    // head-on against a wall (per-axis slide cannot help) — sidestep
+    // perpendicular for 0.5 s, then retry the route.
+    lastX: 0, lastZ: 0, stuckSince: 0, sidestepUntil: 0, sidestepDir: 1,
     visible: null,              // currently visible enemy (player object)
     lastSeen: null,             // { x, z, t }
     heard: null,                // { x, z, t, kind }
@@ -285,8 +289,27 @@ export function updateBot(s, p, dt, rng, bus) {
         // Strafe-peek at corners: brief pause, look around.
         if (rng.chance(0.35)) b.peekUntil = now + rng.range(0.3, 0.7);
       } else if (now > b.peekUntil) {
+        // Unstuck check: barely moved in the last 0.6 s?
+        const moved = Math.hypot(p.x - b.lastX, p.z - b.lastZ);
+        if (moved < 0.05) {
+          if (b.stuckSince === 0) b.stuckSince = now;
+          else if (now - b.stuckSince > 0.6 && now > b.sidestepUntil) {
+            b.sidestepUntil = now + 0.5;
+            b.sidestepDir = rng.chance(0.5) ? 1 : -1;
+            b.stuckSince = 0;
+          }
+        } else {
+          b.stuckSince = 0;
+          b.lastX = p.x; b.lastZ = p.z;
+        }
         const sp = 4.5;
-        const step = moveCircle(p.x, p.z, (dx / d) * sp * dt, (dz / d) * sp * dt, 0.45);
+        let mx = (dx / d) * sp * dt, mz = (dz / d) * sp * dt;
+        if (now < b.sidestepUntil) {
+          // Move perpendicular to the route direction instead.
+          mx = (-dz / d) * sp * b.sidestepDir * dt;
+          mz = (dx / d) * sp * b.sidestepDir * dt;
+        }
+        const step = moveCircle(p.x, p.z, mx, mz, 0.45);
         p.x = step.x; p.z = step.z;
         // Face where we walk, unless we have a target.
         if (!b.visible) p.yaw = Math.atan2(-dx, -dz);

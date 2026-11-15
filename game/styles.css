@@ -63,7 +63,7 @@ body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; co
 #banner-title { font-size: 34px; font-weight: 800; }
 #banner-sub { font-size: 14px; color: #D8E8D8; margin-top: 4px; }
 
-#buy-menu { position: absolute; inset: 8% 12%; background: rgba(8, 26, 14, 0.94); border-radius: 10px; padding: 20px; display: none; pointer-events: auto; }
+#buy-menu { position: absolute; inset: 14% 12% 8% 12%; background: rgba(8, 26, 14, 0.94); border-radius: 10px; padding: 20px; display: none; pointer-events: auto; }
 #buy-menu h2 { font-size: 22px; }
 #buy-money { font-size: 26px; font-weight: 800; color: #FFD27A; margin: 6px 0 12px; }
 #buy-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }

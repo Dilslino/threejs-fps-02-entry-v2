@@ -114,7 +114,7 @@ export function createRenderer(canvas) {
   const domeGlass = new THREE.Mesh(
     new THREE.SphereGeometry(9, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2),
     new THREE.MeshLambertMaterial({
-      color: PALETTE.glass, transparent: true, opacity: 0.22,
+      color: PALETTE.glass, transparent: true, opacity: 0.15,
       depthWrite: false, side: THREE.DoubleSide,
     }),
   );
@@ -127,6 +127,16 @@ export function createRenderer(canvas) {
   domeRing.rotation.x = Math.PI / 2;
   domeRing.position.set(0, 0.1, -14);
   scene.add(domeRing);
+  // Vertical frame arcs so the dome reads as a structure, not a disc.
+  for (const ry of [0, Math.PI / 3, -Math.PI / 3]) {
+    const arc = new THREE.Mesh(
+      new THREE.TorusGeometry(9, 0.18, 6, 24, Math.PI),
+      mat(PALETTE.domeFrame),
+    );
+    arc.rotation.y = ry;
+    arc.position.set(0, 0, -14);
+    scene.add(arc);
+  }
   const domeTop = new THREE.Mesh(
     new THREE.SphereGeometry(0.5, 12, 8),
     mat(0xFFD27A),
@@ -150,10 +160,10 @@ export function createRenderer(canvas) {
 
   // ---- Lily pond water (the pond box is the low wall) ----
   const pondWater = new THREE.Mesh(
-    new THREE.PlaneGeometry(8, 10),
+    new THREE.PlaneGeometry(6, 8),
     new THREE.MeshLambertMaterial({ color: PALETTE.water }),
   );
-  pondWater.rotation.x = -Math.PI / 2; pondWater.position.set(21, 1.02, 0);
+  pondWater.rotation.x = -Math.PI / 2; pondWater.position.set(19, 1.02, 10);
   scene.add(pondWater);
 
   // ---- Site markers: emissive floor rings, amber A / aqua B ----
@@ -189,14 +199,14 @@ export function createRenderer(canvas) {
     b.scale.set(w, h, d); b.position.set(x, y, z);
     vm.add(b);
   }
-  vmBox(0.09, 0.12, 0.55, 0, 0, -0.35);          // receiver
-  vmBox(0.05, 0.05, 0.4, 0, 0.01, -0.75);        // barrel
-  vmBox(0.07, 0.09, 0.3, 0, -0.01, -0.6, vmMat2); // handguard
-  vmBox(0.06, 0.18, 0.1, 0, -0.14, -0.3);        // magazine
-  vmBox(0.08, 0.1, 0.2, 0, -0.01, 0.05);         // stock
-  vmBox(0.03, 0.06, 0.12, 0, 0.09, -0.35);       // sight
-  vmBox(0.05, 0.12, 0.07, 0, -0.1, -0.12);       // grip
-  vm.position.set(0.28, -0.24, -0.5);
+  vmBox(0.06, 0.08, 0.38, 0, 0, -0.24);          // receiver
+  vmBox(0.035, 0.035, 0.28, 0, 0.01, -0.52);      // barrel
+  vmBox(0.05, 0.06, 0.21, 0, -0.01, -0.42, vmMat2); // handguard
+  vmBox(0.04, 0.12, 0.07, 0, -0.1, -0.21);        // magazine
+  vmBox(0.055, 0.07, 0.14, 0, -0.01, 0.03);       // stock
+  vmBox(0.02, 0.04, 0.08, 0, 0.06, -0.24);        // sight
+  vmBox(0.035, 0.08, 0.05, 0, -0.07, -0.08);      // grip
+  vm.position.set(0.22, -0.2, -0.45);
   camera.add(vm);
   scene.add(camera);
 
@@ -235,7 +245,7 @@ export function createRenderer(canvas) {
     t.line.geometry.attributes.position.needsUpdate = true;
     t.line.material.color.setHex(color || 0xFFE08A);
     t.line.material.opacity = 0.9;
-    t.life = 0.08;
+    t.life = 0.15;
   }
 
   // ---- Impact puffs: pooled small quads that expand and fade ----
@@ -298,6 +308,17 @@ export function createRenderer(canvas) {
   canister.visible = false;
   scene.add(canister);
 
+  // ---- Smoke: pooled soft grey spheres, one per live smoke puff ----
+  const smokePool = [];
+  for (let i = 0; i < 3; i++) {
+    const s = new THREE.Mesh(
+      new THREE.SphereGeometry(4, 12, 8),
+      new THREE.MeshLambertMaterial({ color: 0xC8C8C8, transparent: true, opacity: 0 }),
+    );
+    scene.add(s);
+    smokePool.push(s);
+  }
+
   let flashT = 0;
   return {
     renderer, scene, camera,
@@ -328,12 +349,25 @@ export function createRenderer(canvas) {
         canister.material.color.setHex(blink ? 0xFF3B30 : 0xFFD27A);
       }
     },
+    syncSmokes(smokes, now) {
+      for (let i = 0; i < smokePool.length; i++) {
+        const puff = smokes[i];
+        const mesh = smokePool[i];
+        if (puff && puff.until > now) {
+          mesh.visible = true;
+          mesh.position.set(puff.x, 2, puff.z);
+          mesh.material.opacity = 0.38;
+        } else {
+          mesh.visible = false;
+        }
+      }
+    },
     update(dt, time) {
       // Tracer + puff decay.
       for (const t of tracerPool) {
         if (t.life > 0) {
           t.life -= dt;
-          t.line.material.opacity = Math.max(0, t.life / 0.08) * 0.9;
+          t.line.material.opacity = Math.max(0, t.life / 0.15) * 0.9;
         }
       }
       for (const p of puffPool) {

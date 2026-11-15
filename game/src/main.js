@@ -495,6 +495,8 @@ function frame(now) {
     c.state === 'planted' && Math.floor(state.time * 2) % 2 === 0,
   );
   if (!SHOT) view.update(dt, state.time);
+  view.syncSmokes(state.smokes, state.time);
+  view.renderer.render(view.scene, view.camera);
   hud.update(me);
 
   // Perf overlay.
@@ -530,7 +532,7 @@ function stageShot(n) {
     me.weaponId = 'ar-55'; me.mag = 17; me.reserve = 75;
     me.x = 0; me.z = 14; me.yaw = 0; me.pitch = 0;
     const k1 = players.find((p) => p.id === 'k1');
-    k1.x = 1; k1.z = -4; k1.yaw = Math.PI;
+    k1.x = 2.5; k1.z = -4; k1.yaw = Math.PI;
     const k2 = players.find((p) => p.id === 'k2');
     k2.x = 6; k2.z = 1; k2.yaw = Math.PI * 0.75;
     const t2 = players.find((p) => p.id === 't1');
@@ -541,6 +543,8 @@ function stageShot(n) {
     if (res && !res.empty) {
       view.muzzleFlash({ x: me.x - Math.sin(me.yaw) * 0.6, y: me.y + EYE - 0.15, z: me.z - Math.cos(me.yaw) * 0.6 });
       view.spawnTracer(res.origin, res.end, res.weapon.tracer);
+      // Let the flash die (50 ms) while the tracer is still visible.
+      view.update(0.06, state.time);
     }
   } else if (n === 2) {
     // Site A plant moment: Canister down, fuse running, smoke drifting.
@@ -551,12 +555,12 @@ function stageShot(n) {
     state.canister.site = 'A';
     state.canister.fuse = 32;
     state.canister.carrierId = null;
-    state.smokes.push({ x: -14, z: 0, until: state.time + 12 });
+    state.smokes.push({ x: -19, z: -3, until: state.time + 12 });
     me.money = 1800;
     me.weaponId = 'ar-55'; me.mag = 20; me.reserve = 50;
-    me.x = -20; me.z = 3; me.yaw = Math.atan2(-(-24 - me.x), -(0 - me.z));
+    me.x = -17; me.z = 4; me.yaw = Math.atan2(-(-24 - me.x), -(0 - me.z));
     const k3 = players.find((p) => p.id === 'k3');
-    k3.x = -14; k3.z = -6; k3.yaw = Math.PI * 0.5;
+    k3.x = -22; k3.z = -4; k3.yaw = Math.PI * 0.5;
     const t2 = players.find((p) => p.id === 't1');
     t2.x = -18; t2.z = 6; t2.yaw = 0;
     state.killFeed.unshift({ text: 'THORN-3 ▸ KEEPER-2', t: state.time });
@@ -567,6 +571,8 @@ function stageShot(n) {
     if (res && !res.empty) {
       view.muzzleFlash({ x: me.x - Math.sin(me.yaw) * 0.6, y: me.y + EYE - 0.15, z: me.z - Math.cos(me.yaw) * 0.6 });
       view.spawnTracer(res.origin, res.end, res.weapon.tracer);
+      // Let the flash die (50 ms) while the tracer is still visible.
+      view.update(0.06, state.time);
     }
   } else if (n === 3) {
     // Freeze time: buy menu open, AR-55 highlighted.
@@ -596,6 +602,9 @@ function stageShot(n) {
     t4.x = 6; t4.z = 14; t4.yaw = 0;
   }
   hud.update(me);
+  // No round banner in a staged shot — it would cover the firefight.
+  const banner = document.getElementById('banner');
+  if (banner) banner.style.display = 'none';
   window.__shotReady = true;
 }
 

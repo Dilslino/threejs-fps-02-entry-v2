@@ -52,7 +52,9 @@ export const BOXES = [
   { x0: -26.5, z0: 1.5, x1: -25.5, z1: 2.5, h: 1.0, kind: 'pot' },
 
   // ---- Pond Hall (east, Site B) — lily pond + arch ----
-  { x0: 17, z0: -5, x1: 25, z1: 5, h: 1.0, kind: 'pond' }, // lily pond (blocked)
+  // The pond sits on the SOUTH side of Pond Hall so the z=0 lane from the
+  // arch to Site B stays open — the plant zone must be walkable.
+  { x0: 16, z0: 6, x1: 22, z1: 14, h: 1.0, kind: 'pond' }, // lily pond (blocked)
   { x0: 19.6, z0: -2.4, x1: 20.4, z1: -1.6, h: 4, kind: 'post' }, // arch post
   { x0: 19.6, z0: 1.6, x1: 20.4, z1: 2.4, h: 4, kind: 'post' },   // arch post
   { x0: 13, z0: -12, x1: 15, z1: -8, h: 0.9, kind: 'bed' },
@@ -111,12 +113,12 @@ export const WAYPOINTS = [
   { id: 'fernN', x: -18, z: -10 },
   { id: 'fernS', x: -18, z: 10 },
   { id: 'siteA', x: -24, z: 0 },
-  { id: 'fernGap', x: -14, z: 0 },
+  { id: 'fernGap', x: -14, z: 1 },
   { id: 'fernNW', x: -24, z: -14 },
   { id: 'fernSW', x: -24, z: 14 },
   { id: 'pondEntry', x: 10, z: 0 },
   { id: 'pondN', x: 18, z: -10 },
-  { id: 'pondS', x: 18, z: 10 },
+  { id: 'pondS', x: 13, z: 10 },
   { id: 'pondArch', x: 20, z: 0 },
   { id: 'siteB', x: 24, z: 0 },
   { id: 'pondNE', x: 27, z: -10 },
