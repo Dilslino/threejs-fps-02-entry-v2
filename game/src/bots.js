@@ -149,6 +149,19 @@ function routeTarget(p) {
 function think(s, p, rng) {
   const b = p.bot;
   const now = s.time;
+  // Dropped canister: the nearest alive Thorn goes and picks it up.
+  // (The pickup itself fires in main.js when they get within 1.5 m.)
+  if (s.canister.state === 'dropped' && p.team === 'thorns') {
+    const alive = s.players.filter(e => e.team === 'thorns' && e.alive);
+    const nearest = alive.sort((a, b) =>
+      Math.hypot(a.x - s.canister.x, a.z - s.canister.z) -
+      Math.hypot(b.x - s.canister.x, b.z - s.canister.z))[0];
+    if (nearest === p) {
+      b.state = 'advance';
+      b.route = [{ id: 'drop', x: s.canister.x, z: s.canister.z }];
+      b.routeIdx = 0;
+    }
+  }
   // Plant / defuse take priority over everything else.
   if (s.canister.state === 'planted' && p.team === 'keepers') {
     const site = s.canister.site;
@@ -161,8 +174,11 @@ function think(s, p, rng) {
   if (p.team === 'thorns' && s.canister.carrierId === p.id && s.canister.state === 'carried') {
     const site = b.site || 'A';
     const dSite = Math.hypot(SITES[site].x - p.x, SITES[site].z - p.z);
+    // The carrier plants when the site itself is clear — defenders
+    // holding 8+ m out do not block the plant (they can still be shot
+    // while the channel runs). 15 m made the plant nearly impossible.
     const enemiesNear = s.players.some(e => e.team !== p.team && e.alive &&
-      Math.hypot(e.x - SITES[site].x, e.z - SITES[site].z) < 15);
+      Math.hypot(e.x - SITES[site].x, e.z - SITES[site].z) < 8);
     if (dSite < 3 && !enemiesNear) { b.state = 'plant'; return; }
   }
   if (s.canister.state === 'planted' && p.team === 'keepers') {

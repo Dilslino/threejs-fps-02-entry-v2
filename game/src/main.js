@@ -390,6 +390,35 @@ function step(dt) {
     if (state.roundTimer <= 0 && state.canister.state !== 'planted') {
       endRound('keepers', 'timeout');
     }
+    // Canister drop + pickup. If the carrier dies, the canister drops
+    // where they fell; any alive Thorn who walks over it picks it up and
+    // becomes the new carrier. Without this the round is unwinnable for
+    // the Thorns the moment the first carrier dies.
+    const can = state.canister;
+    if (can.state === 'carried' && can.carrierId) {
+      const carrier = playerById(state, can.carrierId);
+      if (carrier && !carrier.alive) {
+        can.state = 'dropped';
+        can.x = carrier.x; can.z = carrier.z;
+        can.carrierId = null;
+        callout(state, carrier, 'canister down — pick it up');
+      }
+    }
+    if (can.state === 'dropped') {
+      for (const p of players) {
+        if (p.team !== 'thorns' || !p.alive) continue;
+        if (Math.hypot(p.x - can.x, p.z - can.z) < 1.5) {
+          can.state = 'carried';
+          can.carrierId = p.id;
+          if (p.bot) {
+            p.bot.role = 'carrier'; p.bot.site = 'A';
+            p.bot.state = 'advance'; p.bot.route = [];
+          }
+          callout(state, p, 'got the canister');
+          break;
+        }
+      }
+    }
     // Player plant channel (hold E in the zone while carrying).
     if (keys.KeyE && me.alive && state.canister.state === 'carried' && state.canister.carrierId === me.id) {
       const site = nearSite(me);
